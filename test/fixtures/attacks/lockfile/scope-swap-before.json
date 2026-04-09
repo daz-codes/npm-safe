@@ -1,0 +1,19 @@
+{
+  "name": "test-project",
+  "version": "1.0.0",
+  "lockfileVersion": 3,
+  "packages": {
+    "": {
+      "name": "test-project",
+      "version": "1.0.0",
+      "dependencies": {
+        "@myorg/utils": "^1.0.0"
+      }
+    },
+    "node_modules/@myorg/utils": {
+      "version": "1.0.0",
+      "resolved": "https://registry.npmjs.org/@myorg/utils/-/utils-1.0.0.tgz",
+      "integrity": "sha512-abc123originalScopedPackageIntegrity000000000000000000000000000000000000000000000000Q=="
+    }
+  }
+}

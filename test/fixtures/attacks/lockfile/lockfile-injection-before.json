@@ -1,0 +1,19 @@
+{
+  "name": "test-project",
+  "version": "1.0.0",
+  "lockfileVersion": 3,
+  "packages": {
+    "": {
+      "name": "test-project",
+      "version": "1.0.0",
+      "dependencies": {
+        "cool-lib": "^1.0.0"
+      }
+    },
+    "node_modules/cool-lib": {
+      "version": "1.0.0",
+      "resolved": "https://registry.npmjs.org/cool-lib/-/cool-lib-1.0.0.tgz",
+      "integrity": "sha512-normalRegistryIntegrity00000000000000000000000000000000000000000000000000000000000000Q=="
+    }
+  }
+}

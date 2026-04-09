@@ -1,0 +1,31 @@
+{
+  "name": "test-project",
+  "version": "1.0.0",
+  "lockfileVersion": 3,
+  "packages": {
+    "": {
+      "name": "test-project",
+      "version": "1.0.0",
+      "dependencies": {
+        "safe-dep": "^1.1.0",
+        "new-dep": "^2.0.0"
+      }
+    },
+    "node_modules/safe-dep": {
+      "version": "1.1.0",
+      "resolved": "https://registry.npmjs.org/safe-dep/-/safe-dep-1.1.0.tgz",
+      "integrity": "sha512-def456"
+    },
+    "node_modules/new-dep": {
+      "version": "2.0.0",
+      "resolved": "https://registry.npmjs.org/new-dep/-/new-dep-2.0.0.tgz",
+      "integrity": "sha512-ghi789",
+      "hasInstallScript": true
+    },
+    "node_modules/new-dep/node_modules/transitive": {
+      "version": "1.0.0",
+      "resolved": "https://registry.npmjs.org/transitive/-/transitive-1.0.0.tgz",
+      "integrity": "sha512-jkl012"
+    }
+  }
+}

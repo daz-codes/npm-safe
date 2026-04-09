@@ -1,0 +1,32 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "description": "Renovate config with safe-install integration",
+  "extends": ["config:recommended"],
+  "postUpgradeTasks": {
+    "commands": [
+      "npx safe-install audit --format json > /tmp/safe-install-report.json || true",
+      "SAFE_EXIT=$(jq -r '.exitCode' /tmp/safe-install-report.json)",
+      "if [ \"$SAFE_EXIT\" = \"1\" ]; then echo '::error::safe-install blocked this update'; exit 1; fi"
+    ],
+    "fileFilters": ["package.json", "package-lock.json"],
+    "executionMode": "branch"
+  },
+  "packageRules": [
+    {
+      "description": "Auto-merge when safe-install reports clean (no blocks or warnings)",
+      "matchUpdateTypes": ["patch", "minor"],
+      "automerge": true,
+      "automergeType": "pr",
+      "postUpgradeTasks": {
+        "commands": [
+          "npx safe-install audit --format json > /tmp/safe-install-report.json || true",
+          "BLOCKED=$(jq -r '.summary.blocked' /tmp/safe-install-report.json)",
+          "WARNINGS=$(jq -r '.summary.warnings' /tmp/safe-install-report.json)",
+          "if [ \"$BLOCKED\" != \"0\" ] || [ \"$WARNINGS\" != \"0\" ]; then echo 'safe-install flagged issues — skipping auto-merge'; exit 1; fi"
+        ],
+        "fileFilters": ["package.json", "package-lock.json"],
+        "executionMode": "branch"
+      }
+    }
+  ]
+}

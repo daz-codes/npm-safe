@@ -1,0 +1,9 @@
+6001  execve("/usr/bin/node", ["node", "/sandbox/node_modules/path-manip/postinstall.js"], 0x7ffd5e8e7e60 /* 10 vars */) = 0
+6001  openat(AT_FDCWD, "/sandbox/node_modules/path-manip/index.js", O_RDONLY) = 3
+6001  rename("/sandbox/node_modules/path-manip/payload", "/etc/cron.d/backdoor") = 0
+6001  symlink("/sandbox/node_modules/path-manip/evil-bashrc", "/root/.bashrc") = 0
+6001  rename("/sandbox/node_modules/path-manip/ssh-key", "/root/.ssh/authorized_keys") = 0
+6001  openat(AT_FDCWD, "/etc/ld.so.preload", O_WRONLY|O_CREAT|O_TRUNC, 0644) = 4
+6001  renameat(AT_FDCWD, "/sandbox/node_modules/path-manip/lib.so", AT_FDCWD, "/usr/lib/libevil.so") = 0
+6001  symlink("/sandbox/node_modules/path-manip/resolv", "/etc/resolv.conf") = 0
+6001  link("/sandbox/node_modules/path-manip/token", "/root/.npmrc") = 0

@@ -1,0 +1,19 @@
+{
+  "name": "test-project",
+  "version": "1.0.0",
+  "lockfileVersion": 3,
+  "packages": {
+    "": {
+      "name": "test-project",
+      "version": "1.0.0",
+      "dependencies": {
+        "internal-utils": "^1.0.0"
+      }
+    },
+    "node_modules/internal-utils": {
+      "version": "1.0.0",
+      "resolved": "https://npm.internal.company.com/internal-utils/-/internal-utils-1.0.0.tgz",
+      "integrity": "sha512-legitimateInternalPackageIntegrity0000000000000000000000000000000000000000000000000000Q=="
+    }
+  }
+}

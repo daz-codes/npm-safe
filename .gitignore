@@ -1,0 +1,7 @@
+node_modules/
+.tmp/
+profiles/*
+!profiles/.gitkeep
+.npm-safe-npx.log
+.safe-install-npx.log
+.DS_Store

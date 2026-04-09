@@ -1,0 +1,26 @@
+{
+  "$schema": "./schema.json",
+  "allowlist": [],
+  "rules": {
+    "no-install-scripts": { "enabled": true, "severity": "block" },
+    "no-repository": { "enabled": true, "severity": "warn" },
+    "new-transitive-dep": { "enabled": true, "severity": "warn" },
+    "maintainer-changed": { "enabled": true, "severity": "warn" },
+    "sandbox-network-attempt": { "enabled": true, "severity": "block" },
+    "sandbox-unexpected-process": { "enabled": true, "severity": "warn" },
+    "sandbox-file-write-outside-modules": { "enabled": true, "severity": "block" },
+    "behaviour-diff-new-network": { "enabled": true, "severity": "block" },
+    "behaviour-diff-new-process": { "enabled": true, "severity": "warn" }
+  },
+  "autoApprove": false,
+  "sandbox": {
+    "enabled": false,
+    "timeout": 60,
+    "memoryLimit": "256m",
+    "cpuLimit": "0.5"
+  },
+  "profiles": {
+    "directory": "./profiles",
+    "storeOnClean": true
+  }
+}

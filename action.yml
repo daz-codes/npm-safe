@@ -1,0 +1,218 @@
+name: 'safe-install audit'
+description: 'Run safe-install security analysis on dependency changes'
+branding:
+  icon: 'shield'
+  color: 'green'
+
+inputs:
+  working-directory:
+    description: 'Directory containing package.json'
+    required: false
+    default: '.'
+  sandbox:
+    description: 'Enable Docker sandbox analysis'
+    required: false
+    default: 'false'
+  fail-on-warn:
+    description: 'Fail the check on warnings (exit code 2), not just blocks'
+    required: false
+    default: 'false'
+  post-comment:
+    description: 'Post report as a PR comment'
+    required: false
+    default: 'true'
+  upload-profiles:
+    description: 'Upload behaviour profiles as artifacts'
+    required: false
+    default: 'true'
+
+outputs:
+  exit-code:
+    description: 'Exit code from safe-install (0=clean, 1=blocked, 2=warnings)'
+  blocked:
+    description: 'Number of blocked packages'
+  warnings:
+    description: 'Number of packages with warnings'
+  clean:
+    description: 'Number of clean packages'
+  report-json:
+    description: 'Full JSON report'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+
+    - name: Install safe-install
+      shell: bash
+      run: npm install -g ${{ github.action_path }}
+
+    - name: Restore behaviour profiles
+      if: inputs.upload-profiles == 'true'
+      uses: actions/cache@v4
+      with:
+        path: ${{ inputs.working-directory }}/profiles
+        key: safe-install-profiles-${{ hashFiles(format('{0}/package-lock.json', inputs.working-directory)) }}
+        restore-keys: |
+          safe-install-profiles-
+
+    - name: Run safe-install audit
+      id: audit
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      env:
+        SAFE_INSTALL_SANDBOX: ${{ inputs.sandbox }}
+      run: |
+        set +e
+        REPORT_JSON=$(safe-install audit --format json)
+        EXIT_CODE=$?
+        set -e
+
+        echo "exit-code=${EXIT_CODE}" >> "$GITHUB_OUTPUT"
+
+        # Parse summary from JSON using node (avoids jq dependency)
+        node -e "
+          const r = JSON.parse(process.argv[1]);
+          console.log('blocked=' + r.summary.blocked);
+          console.log('warnings=' + r.summary.warnings);
+          console.log('clean=' + r.summary.clean);
+        " "$REPORT_JSON" >> "$GITHUB_OUTPUT"
+
+        # Store JSON for the comment step (escape for multiline)
+        EOF=$(dd if=/dev/urandom bs=15 count=1 status=none | base64)
+        echo "report-json<<${EOF}" >> "$GITHUB_OUTPUT"
+        echo "$REPORT_JSON" >> "$GITHUB_OUTPUT"
+        echo "${EOF}" >> "$GITHUB_OUTPUT"
+
+        # Print a human-readable summary for the Actions log
+        node -e "
+          const r = JSON.parse(process.argv[1]);
+          const s = r.summary;
+          console.log('safe-install audit: ' + s.blocked + ' blocked, ' + s.warnings + ' warnings, ' + s.clean + ' clean');
+          for (const p of r.packages) {
+            if (p.violations.length === 0) continue;
+            const sevs = p.violations.map(v => v.severity.toUpperCase()).join(', ');
+            console.log('  ' + p.name + '@' + p.version + ' [' + sevs + ']');
+          }
+        " "$REPORT_JSON"
+
+    - name: Post PR comment
+      if: inputs.post-comment == 'true' && github.event_name == 'pull_request'
+      uses: actions/github-script@v7
+      env:
+        AUDIT_EXIT_CODE: ${{ steps.audit.outputs.exit-code }}
+        AUDIT_BLOCKED: ${{ steps.audit.outputs.blocked }}
+        AUDIT_WARNINGS: ${{ steps.audit.outputs.warnings }}
+        AUDIT_CLEAN: ${{ steps.audit.outputs.clean }}
+        AUDIT_REPORT_JSON: ${{ steps.audit.outputs.report-json }}
+      with:
+        script: |
+          const exitCode = parseInt(process.env.AUDIT_EXIT_CODE || '0');
+          const blocked = parseInt(process.env.AUDIT_BLOCKED || '0');
+          const warnings = parseInt(process.env.AUDIT_WARNINGS || '0');
+          const clean = parseInt(process.env.AUDIT_CLEAN || '0');
+
+          let statusIcon, statusText;
+          if (exitCode === 1) {
+            statusIcon = '🚫';
+            statusText = 'Blocked';
+          } else if (exitCode === 2) {
+            statusIcon = '⚠️';
+            statusText = 'Warnings';
+          } else {
+            statusIcon = '✅';
+            statusText = 'Clean';
+          }
+
+          const report = JSON.parse(process.env.AUDIT_REPORT_JSON || '{"packages":[]}');
+          const packages = report.packages || [];
+
+          let details = '';
+          const blockedPkgs = packages.filter(p => p.violations.some(v => v.severity === 'block'));
+          const warnPkgs = packages.filter(p => !p.violations.some(v => v.severity === 'block') && p.violations.some(v => v.severity === 'warn'));
+
+          if (blockedPkgs.length > 0) {
+            details += '### Blocked\n';
+            for (const p of blockedPkgs) {
+              const version = p.previousVersion ? `${p.previousVersion} → ${p.version}` : p.version;
+              details += `- **${p.name}** ${version}\n`;
+              for (const v of p.violations) {
+                details += `  - \`${v.severity.toUpperCase()}\` ${v.description}\n`;
+              }
+            }
+            details += '\n';
+          }
+
+          if (warnPkgs.length > 0) {
+            details += '### Warnings\n';
+            for (const p of warnPkgs) {
+              const version = p.previousVersion ? `${p.previousVersion} → ${p.version}` : p.version;
+              details += `- **${p.name}** ${version}\n`;
+              for (const v of p.violations) {
+                details += `  - \`${v.severity.toUpperCase()}\` ${v.description}\n`;
+              }
+            }
+          }
+
+          const body = [
+            `## ${statusIcon} safe-install: ${statusText}`,
+            '',
+            `| Blocked | Warnings | Clean |`,
+            `|---------|----------|-------|`,
+            `| ${blocked} | ${warnings} | ${clean} |`,
+            '',
+            details,
+            '',
+            '<sub>Generated by <a href="https://github.com/safe-install/safe-install">safe-install</a></sub>',
+          ].join('\n');
+
+          // Find existing comment to update
+          const { data: comments } = await github.rest.issues.listComments({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            issue_number: context.issue.number,
+          });
+          const existing = comments.find(c => c.body.includes('safe-install:'));
+
+          if (existing) {
+            await github.rest.issues.updateComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              comment_id: existing.id,
+              body,
+            });
+          } else {
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body,
+            });
+          }
+
+    - name: Upload behaviour profiles
+      if: inputs.upload-profiles == 'true'
+      uses: actions/cache/save@v4
+      with:
+        path: ${{ inputs.working-directory }}/profiles
+        key: safe-install-profiles-${{ hashFiles(format('{0}/package-lock.json', inputs.working-directory)) }}
+
+    - name: Check result
+      shell: bash
+      run: |
+        EXIT_CODE="${{ steps.audit.outputs.exit-code }}"
+        EXIT_CODE="${EXIT_CODE:-2}"
+        FAIL_ON_WARN=${{ inputs.fail-on-warn }}
+
+        if [ "$EXIT_CODE" = "1" ]; then
+          echo "::error::safe-install: ${{ steps.audit.outputs.blocked }} package(s) blocked"
+          exit 1
+        elif [ "$EXIT_CODE" = "2" ] && [ "$FAIL_ON_WARN" = "true" ]; then
+          echo "::warning::safe-install: ${{ steps.audit.outputs.warnings }} package(s) with warnings"
+          exit 1
+        elif [ "$EXIT_CODE" = "2" ]; then
+          echo "::warning::safe-install: ${{ steps.audit.outputs.warnings }} package(s) with warnings"
+        fi
